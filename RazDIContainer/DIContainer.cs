@@ -22,7 +22,12 @@ namespace RazDIContainer
 
         public void Register<TConcrete>()
         {
-            resolver[typeof(TConcrete)] = typeof(TConcrete);
+            Register<TConcrete,TConcrete>();
+        }
+
+        public void RegisterSingleton<TConcrete>()
+        {
+            RegisterSingleton<TConcrete,TConcrete>();
         }
 
         public void RegisterSingleton<TAbstract, TConcrete>()
