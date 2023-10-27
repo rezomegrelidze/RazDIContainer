@@ -20,6 +20,11 @@ namespace RazDIContainer
             resolver[typeof(TAbstract)] = typeof(TConcrete);
         }
 
+        public void Register<TConcrete>()
+        {
+            resolver[typeof(TConcrete)] = typeof(TConcrete);
+        }
+
         public void RegisterSingleton<TAbstract, TConcrete>()
         {
             resolver[typeof(TAbstract)] = typeof(TConcrete);
