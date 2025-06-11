@@ -10,22 +10,29 @@ namespace RazDIContainer.ConsoleTests
         {
             container.Register<AnimalService, AnimalService>();
             container.Register<IAnimal, Cat>();
-            container.RegisterSingleton<ICompany,Company>();
-            container.Register<IClock,SystemClock>();
-
+            container.RegisterSingleton<ICompany, Company>();
+            container.RegisterTransient<ComplexService,ComplexService>();
+            container.RegisterTransient<IClock, SystemClock>();
+            // Demonstrate root (singleton/transient) resolution
             var service = container.Resolve<AnimalService>();
-
             service.GetAnimal().MakeSound();
 
-
             var clock = container.Resolve<IClock>();
-
-            container.Register<ComplexService>();
 
             var complexService = container.Resolve<ComplexService>();
             complexService.MakeComplexAction();
 
             Console.WriteLine(clock.Time);
+
+            // Demonstrate scope usage
+            using (var scope = container.CreateScope())
+            {
+                var scopedComplexService = scope.Resolve<ComplexService>();
+                scopedComplexService.MakeComplexAction();
+
+                var scopedAnimalService = scope.Resolve<AnimalService>();
+                scopedAnimalService.GetAnimal().MakeSound();
+            }
         }
     }
 
@@ -35,7 +42,7 @@ namespace RazDIContainer.ConsoleTests
         private readonly ICompany _company;
         private readonly IAnimal _animal;
 
-        public ComplexService(IClock clock,ICompany company,IAnimal animal)
+        public ComplexService(IClock clock, ICompany company, IAnimal animal)
         {
             _clock = clock;
             _company = company;
