@@ -91,7 +91,7 @@ namespace RazDIContainer
         {
             var constructor = type.GetConstructors().First();
             var parameters = constructor.GetParameters()
-                .Select(p => scope.Resolve(p.ParameterType))
+                .Select(p => scope != null ? scope.Resolve(p.ParameterType) : Resolve(p.ParameterType))
                 .ToArray();
             return Activator.CreateInstance(type, parameters);
         }
