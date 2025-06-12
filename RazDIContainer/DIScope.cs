@@ -20,7 +20,7 @@ namespace RazDIContainer
                 if (registration.Lifetime == DIContainer.Lifetime.Scoped)
                 {
                     if (!_scopedInstances.ContainsKey(type))
-                        _scopedInstances[type] = _container.CreateInstanceWithScope(registration.ConcreteType, this);
+                        _scopedInstances[type] = _container.CreateInstanceWithScope(registration.ConcreteType, Resolve);
                     return _scopedInstances[type];
                 }
                 return _container.ResolveWithScope(type, this);

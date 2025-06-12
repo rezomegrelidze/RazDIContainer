@@ -6,19 +6,8 @@ namespace RazDIContainer
 {
     public class DIContainer
     {
-        public enum Lifetime
-        {
-            Transient,
-            Singleton,
-            Scoped
-        }
 
-        internal class Registration
-        {
-            public Type ConcreteType { get; set; }
-            public Lifetime Lifetime { get; set; }
-            public object SingletonInstance { get; set; }
-        }
+        
 
         private readonly Dictionary<Type, Registration> registrations = new Dictionary<Type, Registration>();
 
@@ -77,66 +66,34 @@ namespace RazDIContainer
                 if (registration.Lifetime == Lifetime.Singleton)
                 {
                     if (registration.SingletonInstance == null)
-                        registration.SingletonInstance = CreateInstanceWithScope(registration.ConcreteType, scope);
+                        registration.SingletonInstance = CreateInstanceWithScope(registration.ConcreteType, t => scope != null ? scope.Resolve(t) : Resolve(t));
                     return registration.SingletonInstance;
                 }
                 if (registration.Lifetime == Lifetime.Transient)
-                    return CreateInstanceWithScope(registration.ConcreteType, scope);
+                    return CreateInstanceWithScope(registration.ConcreteType, t => scope != null ? scope.Resolve(t) : Resolve(t));
                 // Scoped handled in DIScope
             }
             throw new InvalidOperationException($"Type {type.Name} not registered");
         }
 
-        internal object CreateInstanceWithScope(Type type, DIScope scope)
+        internal object CreateInstanceWithScope(Type type, Func<Type, object> resolver)
         {
             var constructor = type.GetConstructors().First();
             var parameters = constructor.GetParameters()
-                .Select(p => scope != null ? scope.Resolve(p.ParameterType) : Resolve(p.ParameterType))
+                .Select(p => resolver(p.ParameterType))
                 .ToArray();
             return Activator.CreateInstance(type, parameters);
         }
 
-        public new TAbstract Resolve<TAbstract>()
+        public TAbstract Resolve<TAbstract>()
         {
             return (TAbstract)Resolve(typeof(TAbstract));
         }
 
-        public new object Resolve(Type type)
+        public object Resolve(Type type)
         {
             return ResolveWithScope(type, null);
         }
 
-        // private object Resolve(Type type)
-        // {
-        //     if (registrations.ContainsKey(type))
-        //     {
-        //         var registration = registrations[type];
-        //         if (registration.Lifetime == Lifetime.Singleton)
-        //         {
-        //             if (registration.SingletonInstance == null)
-        //             {
-        //                 registration.SingletonInstance = CreateInstance(registration.ConcreteType);
-        //             }
-        //             return registration.SingletonInstance;
-        //         }
-        //         return CreateInstance(registration.ConcreteType);
-        //     }
-        //     throw new InvalidOperationException($"Type {type.Name} not registered");
-        // }
-
-        private object CreateInstance(Type type)
-        {
-            var constructor = type
-                .GetConstructors().First();
-
-            var parameters = constructor.GetParameters().Select(p =>
-            {
-                if (!registrations.ContainsKey(p.ParameterType)) return Activator.CreateInstance(p.ParameterType);
-                var getInstance = Resolve(p.ParameterType);
-                return getInstance;
-            });
-
-            return Activator.CreateInstance(type, parameters.ToArray());
-        }
     }
 }
